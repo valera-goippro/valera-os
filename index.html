@@ -315,7 +315,17 @@ body { font-family: 'JetBrains Mono', monospace; background: #08080f; color: #cc
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .pulse { animation: pulse 2s infinite; }
 </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+<style>
+#vos-aw{position:fixed;top:0;left:0;width:100%;height:100%;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999}
+.vos-ab{text-align:center;font-family:"JetBrains Mono",monospace}
+.vos-logo{width:64px;height:64px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;color:#fff;margin:0 auto 24px}
+.vos-title{color:#e0e0ff;font-size:24px;font-weight:900;letter-spacing:3px;margin-bottom:8px}
+.vos-sub{color:#333;font-size:11px;margin-bottom:40px}
+#vos-gbtn{padding:12px 36px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;color:#fff;font-family:inherit}
+#vos-err{color:#ff4455;font-size:11px;margin-top:12px;min-height:16px}
+</style></head>
 <body>
 
 <!-- TOP BAR -->
@@ -522,5 +532,68 @@ body { font-family: 'JetBrains Mono', monospace; background: #08080f; color: #cc
 
 </div>
 
-</body>
+<div id="vos-aw"><div class="vos-ab"><div class="vos-logo">V</div><div class="vos-title">VALERA OS</div><div class="vos-sub">Персональная AI-система</div><button id="vos-gbtn" onclick="vosSignIn()">Войти через Google</button><div id="vos-err"></div></div></div>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyDT1vw3pQDekvXFHmOU-1hHE3mXEkRy5TM",authDomain:"valera-os.firebaseapp.com",projectId:"valera-os"});
+var vosAuth=firebase.auth();
+var VOS_KEY=localStorage.getItem("vos_key")||""
+var vosHistory=[];
+vosAuth.onAuthStateChanged(function(u){
+  if(u){
+    var aw=document.getElementById("vos-aw");
+    if(aw)aw.style.display="none";
+    if(!VOS_KEY){VOS_KEY=prompt("Anthropic API Key:");if(VOS_KEY)localStorage.setItem("vos_key",VOS_KEY);}
+    var inp=document.querySelector(".chat-input");
+    var btn=document.querySelector(".send-btn");
+    if(inp&&btn){
+      inp.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();vosSend();}});
+      btn.onclick=vosSend;
+    }
+  } else {
+    var aw=document.getElementById("vos-aw");
+    if(aw)aw.style.display="flex";
+  }
+});
+function vosSignIn(){
+  document.getElementById("vos-err").textContent="";
+  document.getElementById("vos-gbtn").textContent="Входим...";
+  vosAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){
+    document.getElementById("vos-err").textContent=e.message;
+    document.getElementById("vos-gbtn").textContent="Войти через Google";
+  });
+}
+function vosSend(){
+  var inp=document.querySelector(".chat-input");
+  var t=inp?inp.value.trim():"";
+  if(!t)return;
+  if(!VOS_KEY){VOS_KEY=prompt("API Key:");if(VOS_KEY)localStorage.setItem("vos_key",VOS_KEY);return;}
+  var msgs=document.querySelector(".chat-messages");
+  if(msgs){
+    var d=document.createElement("div");
+    d.className="msg from-me";
+    d.innerHTML="<div class="msg-avatar av-me">В</div><div class="msg-bubble">"+(t.replace(/</g,"&lt;"))+ "</div>";
+    msgs.appendChild(d);
+    msgs.scrollTop=msgs.scrollHeight;
+  }
+  vosHistory.push({role:"user",content:t});
+  if(inp)inp.value="";
+  fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":VOS_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1024,system:"Ты Claude — AI-ассистент Валеры. Проект: Valera OS.",messages:vosHistory})
+  }).then(function(r){return r.json();}).then(function(d){
+    var rep=d.content&&d.content[0]?d.content[0].text:JSON.stringify(d);
+    vosHistory.push({role:"assistant",content:rep});
+    var msgs=document.querySelector(".chat-messages");
+    if(msgs){
+      var el=document.createElement("div");
+      el.className="msg from-claude";
+      el.innerHTML="<div class="msg-avatar av-claude">C</div><div class="msg-bubble">"+(rep.replace(/</g,"&lt;").replace(/
+/g,"<br>"))+"</div>";
+      msgs.appendChild(el);
+      msgs.scrollTop=msgs.scrollHeight;
+    }
+  }).catch(function(e){alert("Ошибка: "+e.message);});
+}
+</script></body>
 </html>
