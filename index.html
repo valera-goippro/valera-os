@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Valera OS</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #ffffff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* TOPBAR */
+.topbar { background: #1c1c1c; border-bottom: 2px solid #f5c518; height: 52px; padding: 0 20px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.logo { width: 34px; height: 34px; background: #f5c518; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; color: #000; }
+.brand { font-size: 15px; font-weight: 700; color: #f5c518; letter-spacing: 1px; }
+.pill { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid; }
+.p-claude { border-color: #f5c518; color: #f5c518; background: rgba(245,197,24,0.1); }
+.p-code   { border-color: #00e676; color: #00e676; background: rgba(0,230,118,0.1); }
+.dot { width: 7px; height: 7px; border-radius: 50%; }
+.d-y { background: #f5c518; }
+.d-g { background: #00e676; }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+#status { margin-left: auto; font-size: 11px; color: #666; }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 215px 1fr 295px; flex: 1; overflow: hidden; }
+
+/* LEFT PANEL */
+.left { background: #161616; border-right: 1px solid #2c2c2c; display: flex; flex-direction: column; }
+.panel-hdr { padding: 12px 16px; font-size: 10px; font-weight: 700; color: #555; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid #2c2c2c; }
+.plist { flex: 1; overflow-y: auto; padding: 8px; }
+.pitem { padding: 11px 13px; border-radius: 9px; margin-bottom: 4px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+.pitem:hover { background: #202020; border-color: #333; }
+.pitem.on { background: #1e1900; border-color: #f5c518; }
+.pitem-name { font-size: 12px; font-weight: 600; color: #ccc; margin-bottom: 4px; }
+.pitem.on .pitem-name { color: #f5c518; }
+.pitem-st { font-size: 10px; }
+.st-active { color: #00e676; }
+.st-queue  { color: #ffa726; }
+.st-done   { color: #555; }
+.padd { padding: 8px; border-top: 1px solid #2c2c2c; }
+.padd-btn { width: 100%; padding: 9px; background: transparent; border: 1px dashed #333; border-radius: 8px; color: #555; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.padd-btn:hover { border-color: #f5c518; color: #f5c518; }
+
+/* CENTER */
+.center { display: flex; flex-direction: column; background: #111; }
+.chat-hdr { height: 50px; padding: 0 20px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.chat-hdr-name { font-size: 14px; font-weight: 600; color: #f5c518; }
+.chat-hdr-sub  { font-size: 11px; color: #555; }
+.msgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.empty-msg { color: #333; text-align: center; padding: 80px 0; font-size: 13px; }
+
+.msg { display: flex; gap: 10px; }
+.msg.me { flex-direction: row-reverse; align-self: flex-end; max-width: 80%; }
+.msg:not(.me) { max-width: 88%; }
+.ava { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+.ava-cl { background: #f5c518; color: #000; }
+.ava-me { background: #2a2a2a; color: #888; }
+.bbl { padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7; }
+.msg:not(.me) .bbl { background: #1e1e1e; border: 1px solid #2a2a2a; color: #e0e0e0; }
+.msg.me .bbl { background: #1e1900; border: 1px solid #3a3200; color: #f5d060; }
+.bbl code { background: #0a0a0a; color: #00e676; padding: 2px 7px; border-radius: 4px; font-family: "Courier New", monospace; font-size: 12px; }
+.bbl pre { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #00e676; margin: 10px 0; overflow-x: auto; font-family: "Courier New", monospace; line-height: 1.6; white-space: pre-wrap; }
+.bbl strong { color: #f5c518; }
+.bactions { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+.bact { padding: 5px 13px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid; transition: all 0.15s; }
+.bact:hover { filter: brightness(1.2); }
+.ba-term { background: #001a0a; border-color: #00e676; color: #00e676; }
+.ba-code { background: #1e1900; border-color: #f5c518; color: #f5c518; }
+
+.typing-wrap { display: flex; gap: 10px; }
+.typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 12px; }
+.typing span { width: 8px; height: 8px; background: #f5c518; border-radius: 50%; animation: blink 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,60%,100%{opacity:0.15} 30%{opacity:1} }
+
+.inp-area { padding: 14px 20px; border-top: 1px solid #222; display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0; }
+.inp { flex: 1; background: #1c1c1c; border: 1px solid #333; border-radius: 10px; padding: 11px 16px; color: #fff; font-size: 13px; outline: none; resize: none; min-height: 44px; max-height: 130px; line-height: 1.5; font-family: inherit; }
+.inp:focus { border-color: #f5c518; }
+.inp::placeholder { color: #444; }
+.sendbtn { width: 44px; height: 44px; background: #f5c518; border: none; border-radius: 10px; color: #000; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.sendbtn:hover { background: #ffd740; }
+.sendbtn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* RIGHT */
+.right { background: #161616; border-left: 1px solid #2c2c2c; display: flex; flex-direction: column; }
+.rtabs { display: flex; border-bottom: 1px solid #2c2c2c; flex-shrink: 0; }
+.rtab { flex: 1; padding: 12px 6px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #444; cursor: pointer; border-bottom: 2px solid transparent; text-align: center; text-transform: uppercase; transition: all 0.15s; }
+.rtab.on { color: #f5c518; border-bottom-color: #f5c518; }
+.rtab:hover:not(.on) { color: #888; }
+.rbody { flex: 1; overflow-y: auto; padding: 12px; }
+.rlbl { font-size: 9px; font-weight: 700; color: #444; letter-spacing: 2px; text-transform: uppercase; margin: 12px 0 8px; }
+
+/* BRIDGE */
+.bcard { background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.bcard-hd { padding: 10px 14px; font-size: 11px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #222; }
+.bcard-hd .num { background: #f5c518; color: #000; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.bcard-hd .desc { color: #aaa; font-size: 11px; }
+.bcmd { margin: 10px; padding: 10px 14px; background: #0a0a0a; border: 1px solid #222; border-radius: 7px; font-family: "Courier New", monospace; font-size: 12px; color: #00e676; word-break: break-all; line-height: 1.5; }
+.bbtns { padding: 0 10px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.bb { padding: 8px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid; text-align: center; transition: all 0.15s; font-family: inherit; }
+.bb:hover { filter: brightness(1.2); transform: translateY(-1px); }
+.bb-t { background: #001a0a; border-color: #00e676; color: #00e676; }
+.bb-c { background: #1e1900; border-color: #f5c518; color: #f5c518; }
+.bb-e { background: #1a1000; border-color: #ffa726; color: #ffa726; }
+.bb-b { background: #001a1a; border-color: #26c6da; color: #26c6da; }
+.bb-x { background: #1a0000; border-color: #ef5350; color: #ef5350; grid-column: span 2; }
+
+.hitem { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: #1c1c1c; border: 1px solid #222; border-radius: 7px; margin-bottom: 5px; }
+.hitem-cmd { flex: 1; font-size: 11px; color: #555; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Courier New", monospace; }
+.hwhere { font-size: 10px; padding: 2px 8px; border-radius: 4px; white-space: nowrap; font-weight: 600; }
+.hw-t { background: #001a0a; color: #00e676; }
+.hw-c { background: #1e1900; color: #f5c518; }
+.htime { font-size: 10px; color: #444; white-space: nowrap; }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+<div id="authwall" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0f0f0f;display:flex;align-items:center;justify-content:center;z-index:9999">
+<div style="text-align:center">
+<div style="color:#f5c518;font-size:24px;font-weight:900;margin-bottom:24px">VALERA OS</div>
+<button id="gbtn" style="padding:12px 32px;background:#f5c518;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer">Войти через Google</button>
+</div></div>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyDT1vw3pQDekvXFHmOU-1hHE3mXEkRy5TM",authDomain:"valera-os.firebaseapp.com",projectId:"valera-os"});
+var auth=firebase.auth();
+var provider=new firebase.auth.GoogleAuthProvider();
+document.getElementById("gbtn").onclick=function(){auth.signInWithRedirect(provider);};
+auth.getRedirectResult().then(function(r){if(r.user){document.getElementById("authwall").remove();}});
+auth.onAuthStateChanged(function(u){if(u){document.getElementById("authwall").remove();}});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+<div id="authwall" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0f0f0f;display:flex;align-items:center;justify-content:center;z-index:9999">
+<div style="text-align:center">
+<div style="color:#f5c518;font-size:24px;font-weight:900;margin-bottom:24px">VALERA OS</div>
+<button id="gbtn" style="padding:12px 32px;background:#f5c518;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer">Войти через Google</button>
+</div></div>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyDT1vw3pQDekvXFHmOU-1hHE3mXEkRy5TM",authDomain:"valera-os.firebaseapp.com",projectId:"valera-os"});
+var auth=firebase.auth();
+document.getElementById("gbtn").onclick=function(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());};
+auth.onAuthStateChanged(function(u){
+  if(u){document.getElementById("authwall").remove();}
+});
+</script>
+
+<div class="topbar">
+  <div class="logo">V</div>
+  <div class="brand">VALERA OS</div>
+  <div class="pill p-claude"><div class="dot d-y pulse"></div>Claude</div>
+  <div class="pill p-code"><div class="dot d-g pulse" style="animation-delay:.5s"></div>Claude Code</div>
+  <span id="status">готов</span>
+</div>
+
+<div class="layout">
+
+  <div class="left">
+    <div class="panel-hdr">Проекты</div>
+    <div class="plist" id="plist"></div>
+    <div class="padd"><button class="padd-btn" onclick="addProj()">+ Новый проект</button></div>
+  </div>
+
+  <div class="center">
+    <div class="chat-hdr">
+      <span class="chat-hdr-name" id="ctitle">—</span>
+      <span class="chat-hdr-sub">· Claude Sonnet 4.6</span>
+    </div>
+    <div class="msgs" id="msgs"><div class="empty-msg">Выбери проект слева</div></div>
+    <div class="inp-area">
+      <textarea class="inp" id="inp" placeholder="Диктуй задачу... (Enter — отправить)" rows="1"></textarea>
+      <button class="sendbtn" id="sbtn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="rtabs">
+      <div class="rtab on">BRIDGE</div>
+      <div class="rtab">ИСТОРИЯ</div>
+    </div>
+    <div class="rbody">
+      <div class="rlbl">Ожидают решения</div>
+      <div id="bq"></div>
+      <div class="rlbl" id="hlbl" style="display:none">История</div>
+      <div id="bh"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const KEY = 'YOUR_API_KEY';
+const PROJS = [
+  {id:1,icon:'🌐',name:'GoIPpro сайт',st:'active'},
+  {id:2,icon:'📱',name:'Мобильное приложение',st:'queue'},
+  {id:3,icon:'🤖',name:'AI Voice Agent',st:'queue'},
+];
+const chats = {1:[],2:[],3:[]};
+let cur = null, bq=[], bh=[], bid=1;
+
+function H(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderProjs(){
+  document.getElementById('plist').innerHTML = PROJS.map(p=>`
+    <div class="pitem${cur&&cur.id===p.id?' on':''}" onclick="selProj(${p.id})">
+      <div class="pitem-name">${p.icon} ${H(p.name)}</div>
+      <div class="pitem-st ${p.st==='active'?'st-active':p.st==='queue'?'st-queue':'st-done'}">
+        ${p.st==='active'?'● активен':p.st==='queue'?'● в очереди':'● завершён'}
+      </div>
+    </div>`).join('');
+}
+
+function selProj(id){
+  cur = PROJS.find(p=>p.id===id);
+  if(!cur) return;
+  if(!chats[id]) chats[id]=[];
+  cur.st='active';
+  document.getElementById('ctitle').textContent = cur.icon+' '+cur.name;
+  renderProjs();
+  renderChat();
+}
+
+function addProj(){
+  const name=prompt('Название проекта:'); if(!name) return;
+  const icons=['📁','🚀','💡','🔧','🎯','⚡','🛠','📊'];
+  const id=Date.now();
+  PROJS.push({id,icon:icons[PROJS.length%icons.length],name,st:'active'});
+  chats[id]=[];
+  renderProjs(); selProj(id);
+}
+
+function renderChat(){
+  const el=document.getElementById('msgs');
+  if(!cur){el.innerHTML='<div class="empty-msg">Выбери проект слева</div>';return;}
+  const ms=chats[cur.id]||[];
+  if(!ms.length){el.innerHTML='<div class="empty-msg">Начни диалог...</div>';return;}
+  el.innerHTML=ms.map(m=>{
+    if(m.role==='user') return `<div class="msg me"><div class="ava ava-me">В</div><div class="bbl">${H(m.content)}</div></div>`;
+    let html=H(m.content);
+    html=html.replace(/```[\w]*\n?([\s\S]*?)```/g,'<pre>$1</pre>');
+    html=html.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+    html=html.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+    html=html.replace(/\n/g,'<br>');
+    const cmds=[...(m.content||'').matchAll(/`([^`\n]{4,80})`/g)].map(x=>x[1])
+      .filter(c=>/^(cd |ls |find |npm |python|echo |mkdir|cp |mv |cat |grep |curl |git |brew |pip |node |sh |chmod )/.test(c));
+    const uniq=[...new Set(cmds)].slice(0,2);
+    const acts=uniq.length?`<div class="bactions">${uniq.map(c=>`<button class="bact ba-term" onclick="addBridge(${JSON.stringify(c)},'Из чата')">⚡ ${H(c.slice(0,30))}${c.length>30?'...':''}</button>`).join('')}</div>`:'';
+    return `<div class="msg"><div class="ava ava-cl">⌘</div><div class="bbl">${html}${acts}</div></div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+async function sendMsg(){
+  if(!cur){alert('Выбери проект!');return;}
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim(); if(!txt) return;
+  chats[cur.id].push({role:'user',content:txt});
+  inp.value=''; inp.style.height='44px';
+  renderChat();
+  const el=document.getElementById('msgs');
+  const td=document.createElement('div');
+  td.className='typing-wrap'; td.id='typing';
+  td.innerHTML='<div class="ava ava-cl">⌘</div><div class="typing"><span></span><span></span><span></span></div>';
+  el.appendChild(td); el.scrollTop=el.scrollHeight;
+  document.getElementById('sbtn').disabled=true;
+  document.getElementById('status').textContent='думает...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:2048,
+        system:`Ты Claude в системе Valera OS. Проект: "${cur.name}". Валера — предприниматель, телеком и AI автоматизация (GoIPpro, gsm-travel.com). Команды терминала пиши в обратных кавычках. Отвечай по-русски, чётко.`,
+        messages:chats[cur.id].map(m=>({role:m.role,content:m.content})),
+      })
+    });
+    const d=await r.json();
+    document.getElementById('typing')?.remove();
+    chats[cur.id].push({role:'assistant',content:d.content?.[0]?.text||'Ошибка: '+JSON.stringify(d)});
+    renderChat();
+    document.getElementById('status').textContent='готов';
+  }catch(e){
+    document.getElementById('typing')?.remove();
+    chats[cur.id].push({role:'assistant',content:'Ошибка: '+e.message});
+    renderChat();
+    document.getElementById('status').textContent='ошибка';
+  }
+  document.getElementById('sbtn').disabled=false;
+}
+
+document.getElementById('inp').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+});
+document.getElementById('inp').addEventListener('input',function(){
+  this.style.height='44px';
+  this.style.height=Math.min(this.scrollHeight,130)+'px';
+});
+
+function copyText(t){
+  const ta=document.createElement('textarea');
+  ta.value=t;ta.style.cssText='position:fixed;opacity:0';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  document.execCommand('copy');document.body.removeChild(ta);
+}
+function addBridge(cmd,desc){bq.push({id:bid++,cmd,desc});renderBridge();}
+function execB(id,where){
+  const it=bq.find(i=>i.id===id);if(!it)return;
+  copyText('CLAUDE_EXEC:'+it.cmd);
+  bh.unshift({...it,where,ts:new Date().toLocaleTimeString('ru-RU')});
+  bq=bq.filter(i=>i.id!==id);renderBridge();
+}
+function editB(id){
+  const it=bq.find(i=>i.id===id);if(!it)return;
+  const v=prompt('Редактировать:',it.cmd);
+  if(v!==null){it.cmd=v.trim();renderBridge();}
+}
+function cancelB(id){bq=bq.filter(i=>i.id!==id);renderBridge();}
+function renderBridge(){
+  document.getElementById('bq').innerHTML=bq.length===0
+    ?'<div style="color:#444;text-align:center;padding:24px 0;font-size:12px">Нет команд</div>'
+    :bq.map(it=>`
+      <div class="bcard">
+        <div class="bcard-hd"><div class="num">${it.id}</div><div class="desc">${H(it.desc)}</div></div>
+        <div class="bcmd">${H(it.cmd)}</div>
+        <div class="bbtns">
+          <button class="bb bb-t" onclick="execB(${it.id},'Terminal')">⚡ Terminal</button>
+          <button class="bb bb-c" onclick="execB(${it.id},'Code')">🤖 Claude Code</button>
+          <button class="bb bb-e" onclick="editB(${it.id})">✏ Редактировать</button>
+          <button class="bb bb-b">↩ В чат</button>
+          <button class="bb bb-x" onclick="cancelB(${it.id})">✗ Отменить</button>
+        </div>
+      </div>`).join('');
+  const hl=document.getElementById('hlbl');
+  hl.style.display=bh.length?'block':'none';
+  document.getElementById('bh').innerHTML=bh.slice(0,15).map(h=>`
+    <div class="hitem">
+      <span style="color:#00e676;font-size:14px">✓</span>
+      <span class="hitem-cmd">${H(h.cmd)}</span>
+      <span class="hwhere ${h.where==='Terminal'?'hw-t':'hw-c'}">${h.where}</span>
+      <span class="htime">${h.ts}</span>
+    </div>`).join('');
+}
+renderProjs(); renderBridge(); selProj(1);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+<script>
+const fc={apiKey:"AIzaSyDT1vw3pQDekvXFHmOU-1hHE3mXEkRy5TM",authDomain:"valera-os.firebaseapp.com",projectId:"valera-os"};
+firebase.initializeApp(fc);
+const auth=firebase.auth();
+auth.onAuthStateChanged(function(u){
+  if(!u){
+    var p=document.createElement("div");
+    p.style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0f0f0f;display:flex;align-items:center;justify-content:center;z-index:9999";
+    p.innerHTML="<div style='text-align:center'><div style='color:#f5c518;font-size:24px;font-weight:900;margin-bottom:24px'>VALERA OS</div><button onclick='firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())' style='padding:12px 32px;background:#f5c518;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer'>Войти через Google</button></div>";
+    document.body.appendChild(p);
+  }
+});
+</script></body>
+</html>
