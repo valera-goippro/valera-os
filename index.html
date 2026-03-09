@@ -315,8 +315,8 @@ body { font-family: 'JetBrains Mono', monospace; background: #08080f; color: #cc
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .pulse { animation: pulse 2s infinite; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+
+
 <style>
 #vos-aw{position:fixed;top:0;left:0;width:100%;height:100%;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999}
 .vos-ab{text-align:center;font-family:"JetBrains Mono",monospace}
@@ -325,6 +325,17 @@ body { font-family: 'JetBrains Mono', monospace; background: #08080f; color: #cc
 .vos-sub{color:#333;font-size:11px;margin-bottom:40px}
 #vos-gbtn{padding:12px 36px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;color:#fff;font-family:inherit}
 #vos-err{color:#ff4455;font-size:11px;margin-top:12px;min-height:16px}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<style>
+#vos-wall{position:fixed;top:0;left:0;width:100%;height:100%;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:JetBrains Mono,monospace}
+.vos-box{text-align:center}
+.vos-ico{width:64px;height:64px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;color:#fff;margin:0 auto 20px}
+.vos-h{color:#e0e0ff;font-size:22px;font-weight:900;letter-spacing:3px;margin-bottom:6px}
+.vos-s{color:#333;font-size:11px;margin-bottom:36px}
+#vos-btn{padding:12px 36px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;color:#fff}
+#vos-msg{color:#ff4455;font-size:11px;margin-top:10px;min-height:16px}
 </style></head>
 <body>
 
@@ -532,7 +543,7 @@ body { font-family: 'JetBrains Mono', monospace; background: #08080f; color: #cc
 
 </div>
 
-<div id="vos-aw"><div class="vos-ab"><div class="vos-logo">V</div><div class="vos-title">VALERA OS</div><div class="vos-sub">Персональная AI-система</div><button id="vos-gbtn" onclick="vosSignIn()">Войти через Google</button><div id="vos-err"></div></div></div>
+</div>
 <script>
 firebase.initializeApp({apiKey:"AIzaSyDT1vw3pQDekvXFHmOU-1hHE3mXEkRy5TM",authDomain:"valera-os.firebaseapp.com",projectId:"valera-os"});
 var vosAuth=firebase.auth();
@@ -595,5 +606,74 @@ function vosSend(){
     }
   }).catch(function(e){alert("Ошибка: "+e.message);});
 }
+</script>
+<div id="vos-wall"><div class="vos-box"><div class="vos-ico">V</div><div class="vos-h">VALERA OS</div><div class="vos-s">Персональная AI-система</div><button id="vos-btn">Войти через Google</button><div id="vos-msg"></div></div></div>
+<script>
+(function(){
+  firebase.initializeApp({apiKey:"AIzaSyDT1vw3pQDekvXFHmOU-1hHE3mXEkRy5TM",authDomain:"valera-os.firebaseapp.com",projectId:"valera-os"});
+  var auth = firebase.auth();
+  var KEY = localStorage.getItem("vos_key") || "";
+  var hist = [];
+
+  auth.onAuthStateChanged(function(u){
+    if(u){
+      var w = document.getElementById("vos-wall");
+      if(w) w.style.display = "none";
+      if(!KEY){ KEY = prompt("Anthropic API Key:"); if(KEY) localStorage.setItem("vos_key",KEY); }
+      var inp = document.querySelector(".chat-input");
+      var btn = document.querySelector(".send-btn");
+      if(btn) btn.onclick = vSend;
+      if(inp) inp.onkeydown = function(e){ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();vSend();} };
+    } else {
+      var w = document.getElementById("vos-wall");
+      if(w) w.style.display = "flex";
+    }
+  });
+
+  auth.getRedirectResult().catch(function(e){
+    var m = document.getElementById("vos-msg");
+    if(m) m.textContent = e.message;
+    var b = document.getElementById("vos-btn");
+    if(b) b.textContent = "Войти через Google";
+  });
+
+  document.getElementById("vos-btn").onclick = function(){
+    document.getElementById("vos-msg").textContent = "";
+    document.getElementById("vos-btn").textContent = "Входим...";
+    auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+  };
+
+  function vSend(){
+    var inp = document.querySelector(".chat-input");
+    var t = inp ? inp.value.trim() : "";
+    if(!t) return;
+    if(!KEY){ KEY=prompt("API Key:"); if(KEY) localStorage.setItem("vos_key",KEY); return; }
+    var mc = document.querySelector(".chat-messages");
+    if(mc){
+      var d = document.createElement("div");
+      d.className = "msg from-me";
+      d.innerHTML = "<div class="msg-avatar av-me">В</div><div class="msg-bubble">" + t.replace(/&/g,"&amp;").replace(/</g,"&lt;") + "</div>";
+      mc.appendChild(d); mc.scrollTop = mc.scrollHeight;
+    }
+    hist.push({role:"user",content:t});
+    if(inp) inp.value = "";
+    fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1024,system:"Ты Claude — ассистент Валеры. Valera OS.",messages:hist})
+    }).then(function(r){return r.json();}).then(function(d){
+      var rep = d.content&&d.content[0] ? d.content[0].text : JSON.stringify(d);
+      hist.push({role:"assistant",content:rep});
+      var mc = document.querySelector(".chat-messages");
+      if(mc){
+        var el = document.createElement("div");
+        el.className = "msg from-claude";
+        el.innerHTML = "<div class="msg-avatar av-claude">C</div><div class="msg-bubble">" + rep.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/
+/g,"<br>") + "</div>";
+        mc.appendChild(el); mc.scrollTop = mc.scrollHeight;
+      }
+    }).catch(function(e){ alert("Ошибка: "+e.message); });
+  }
+})();
 </script></body>
 </html>
