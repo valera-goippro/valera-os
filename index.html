@@ -113,7 +113,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .hw-c { background: #1e1900; color: #f5c518; }
 .htime { font-size: 10px; color: #444; white-space: nowrap; }
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script><style>#vaw{position:fixed;top:0;left:0;width:100%;height:100%;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999}.vb{text-align:center}.vi{width:64px;height:64px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;color:#fff;margin:0 auto 20px}.vh{color:#e0e0ff;font-size:22px;font-weight:900;letter-spacing:3px;margin-bottom:6px}.vs{color:#333;font-size:11px;margin-bottom:36px}#vbtn{padding:12px 36px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;color:#fff}#verr{color:#ff4455;font-size:11px;margin-top:10px;min-height:16px}</style></head>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script><style>#vaw{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#08080f;align-items:center;justify-content:center;z-index:9999}.vb{text-align:center}.vi{width:64px;height:64px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;color:#fff;margin:0 auto 20px}.vh{color:#e0e0ff;font-size:22px;font-weight:900;letter-spacing:3px;margin-bottom:6px}.vs{color:#333;font-size:11px;margin-bottom:36px}#vbtn{padding:12px 36px;background:linear-gradient(135deg,#6c63ff,#3ecfcf);border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;color:#fff}#verr{color:#ff4455;font-size:11px;margin-top:10px;min-height:16px}</style></head>
 <body><div id="vaw"><div class="vb"><div class="vi">V</div><div class="vh">VALERA OS</div><div class="vs">Персональная AI-система</div><button id="vbtn">Войти через Google</button><div id="verr"></div></div></div>
 
 <div class="topbar">
@@ -319,8 +319,12 @@ renderProjs(); renderBridge(); selProj(1);
   var auth=firebase.auth(), K=localStorage.getItem('vk')||'', H=[];
   auth.onAuthStateChanged(function(u){
     var w=document.getElementById('vaw');
-    if(u){if(w)w.style.display='none';if(!K){K=prompt('Anthropic API Key:');if(K)localStorage.setItem('vk',K);}}
-    else if(w) w.style.display='flex';
+    if(u){
+      if(w)w.style.display='none';
+      if(!K){K=prompt('Anthropic API Key:');if(K)localStorage.setItem('vk',K);}
+    } else {
+      if(w)w.style.display='flex';
+    }
   });
   auth.getRedirectResult().catch(function(e){
     document.getElementById('verr').textContent=e.message;
