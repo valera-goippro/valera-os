@@ -355,7 +355,17 @@ renderProjs(); renderBridge(); selProj(1);
       if(mc){var el=document.createElement('div');el.className='msg from-claude';el.innerHTML='<div class="msg-avatar av-claude">C</div><div class="msg-bubble">'+escH(rep).replace(/n/g,'<br>')+'</div>';mc.appendChild(el);mc.scrollTop=mc.scrollHeight;}
     }).catch(function(e){alert(e.message);});
   }
-  window.addEventListener('load',function(){
+  
+  var MCP='https://linux-telescope-loan-kathy.trycloudflare.com/mcp';
+  function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function runInTerminal(cmd){
+    var mc=document.querySelector('.chat-messages');
+    var res=document.createElement('div');res.className='msg from-claude';
+    res.innerHTML='<div class="msg-avatar av-claude" style="background:#003a20;border:1px solid #00ff88;color:#00ff88">&#9889;</div><div class="msg-bubble" style="background:#001a0a;border:1px solid #1a3a2a"><code style="color:#00ff88">'+escH(cmd)+'</code><div id="tro" style="color:#555;font-size:11px;margin-top:6px">...</div></div>';
+    if(mc){mc.appendChild(res);mc.scrollTop=mc.scrollHeight;}
+    fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'execute_command',arguments:{command:cmd}}})}).then(function(r){return r.text();}).then(function(t){var m=t.match(/data: (.+)/);var out='error';if(m){try{var d=JSON.parse(m[1]);out=d.result&&d.result.content&&d.result.content[0]?d.result.content[0].text:t;}catch(e){out=t;}}var el=res.querySelector('#tro');if(el)el.outerHTML='<pre style="background:#000;padding:8px;border-radius:5px;font-size:11px;color:#00ff88;margin-top:8px;white-space:pre-wrap">'+escH(out)+'</pre>';if(mc)mc.scrollTop=mc.scrollHeight;}).catch(function(e){var el=res.querySelector('#tro');if(el)el.textContent='ERR: '+e.message;});
+  }
+window.addEventListener('load',function(){
     var b=document.querySelector('.send-btn'),i=document.querySelector('.chat-input');
     if(b)b.onclick=send;
     if(i)i.onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
